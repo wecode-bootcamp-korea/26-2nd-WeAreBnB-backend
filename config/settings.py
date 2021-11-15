@@ -9,11 +9,10 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
-from pathlib        import Path
-from my_settings    import DATABASES, SECRET_KEY
-
+import os
 import pymysql
+
+from pathlib import Path
 
 pymysql.install_as_MySQLdb()
 
@@ -25,7 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = SECRET_KEY
+#SECRET_KEY = os.environ.get('WEAREBNB_SECRET_KEY')
+SECRET_KEY = 'django-insecure-@@su1y%0qgac+*)09xif&5%9ia&ag4ig!2w5g=*_@^mx-8rtp5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -80,7 +80,17 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = DATABASES
+DATABASES = {
+    'default' : {
+        'ENGINE': os.environ.get('WEAREBNB_DB_ENGINE'),
+        'NAME': os.environ.get('WEAREBNB_DB_NAME'),
+        'USER': os.environ.get('WEAREBNB_DB_USER'),
+        'PASSWORD': os.environ.get('WEAREBNB_DB_PASSWORD'),
+        'HOST': os.environ.get('WEAREBNB_DB_HOST'),
+        'PORT': os.environ.get('WEAREBNB_DB_PORT'),
+        'OPTIONS': {'charset': 'utf8mb4'}
+    }
+}
 
 
 # Password validation
