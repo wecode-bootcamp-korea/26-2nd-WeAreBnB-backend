@@ -3,15 +3,14 @@ from django.db import models
 class Room(models.Model):
     host_user   = models.ForeignKey('users.User', on_delete=models.CASCADE)
     room_type   = models.ForeignKey('RoomType', on_delete=models.CASCADE)
-    room_option = models.ForeignKey('RoomOption', on_delete=models.CASCADE, related_name='rooms')
     title       = models.CharField(max_length=100)
     description = models.TextField()
-    max_guest   = models.IntegerField(default=0)
     price       = models.DecimalField(max_digits=9, decimal_places=2, default=0.0)
+    max_guest   = models.IntegerField(default=0)
     bedroom     = models.IntegerField(default=0)
     bed         = models.IntegerField(default=0)
     bath        = models.IntegerField(default=0)
-    created_at  = models.DateTimeField()
+    created_at  = models.DateField()
     
     class Meta:
         db_table = 'rooms'

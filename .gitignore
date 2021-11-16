@@ -362,3 +362,8 @@ zsdoc/data
 !/tests/_output/.gitkeep
 
 # End of https://www.toptal.com/developers/gitignore/api/python,vim,pycharm,visualstudiocode,macos,linux,zsh
+
+# csv
+csv/
+csv/*
+db_uploader.py
