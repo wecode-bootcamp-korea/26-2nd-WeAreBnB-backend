@@ -92,7 +92,11 @@ DATABASES = {
         'PASSWORD': os.environ.get('WEAREBNB_DB_PASSWORD'),
         'HOST': os.environ.get('WEAREBNB_DB_HOST'),
         'PORT': os.environ.get('WEAREBNB_DB_PORT'),
-        'OPTIONS': {'charset': 'utf8mb4'}
+        'OPTIONS': {'charset': 'utf8mb4'},
+        'TEST': {
+            'CHARSET': 'utf8mb4',
+            'COLLATION': 'utf8mb4_general_ci'
+        }
     }
 }
 
