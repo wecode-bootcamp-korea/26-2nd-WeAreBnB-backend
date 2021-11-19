@@ -164,3 +164,4 @@ CORS_ALLOW_HEADERS = (
     'x-requested-with',
 )
 
+ALGORITHM = os.environ.get('WEAREBNB_JWT_ALGORITHM')
