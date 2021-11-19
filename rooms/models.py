@@ -1,6 +1,7 @@
 from django.db import models
 
 class Room(models.Model):
+    location    = models.ForeignKey('RoomLocation', on_delete=models.CASCADE)
     host_user   = models.ForeignKey('users.User', on_delete=models.CASCADE)
     room_type   = models.ForeignKey('RoomType', on_delete=models.CASCADE)
     title       = models.CharField(max_length=100)
@@ -11,6 +12,7 @@ class Room(models.Model):
     bed         = models.IntegerField(default=0)
     bath        = models.IntegerField(default=0)
     created_at  = models.DateField()
+    options     = models.ManyToManyField('Option', through='RoomOption')
     
     class Meta:
         db_table = 'rooms'
@@ -36,7 +38,7 @@ class Option(models.Model):
         return self.name
     
 class RoomImage(models.Model):
-    room      = models.ForeignKey('Room', on_delete=models.CASCADE)
+    room      = models.ForeignKey('Room', on_delete=models.CASCADE, related_name='room_images')
     image_url = models.CharField(max_length=1000, null=True)
     
     class Meta:
@@ -55,7 +57,6 @@ class RoomType(models.Model):
         return self.name
     
 class RoomLocation(models.Model):
-    room      = models.ForeignKey('Room', on_delete=models.CASCADE)
     country   = models.CharField(max_length=100)
     city      = models.CharField(max_length=100)
     address   = models.CharField(max_length=100)
