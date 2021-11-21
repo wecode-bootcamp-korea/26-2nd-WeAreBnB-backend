@@ -1,24 +1,25 @@
 import json
 import jwt
 
-from django.test     import TestCase, Client
-from unittest.mock   import patch, MagicMock
-from config.settings  import SECRET_KEY, ALGORITHM
-from datetime        import datetime, timedelta
+from django.test                    import TestCase, Client
+from django.core.files.uploadedfile import SimpleUploadedFile
+from unittest.mock                  import patch, MagicMock
+from datetime                       import datetime, timedelta
+from config.settings                import SECRET_KEY, ALGORITHM
 
-from users.models    import User
+from users.models                   import User
 
 class SignUpTest(TestCase):
     def setUp(self):
         User.objects.create(
-            id               = 1,
-            email            = 'mjb@gmail.com',
-            password         = '1q2w3e4r!',
-            name             = '민정',
-            phone            = '111-1111-1111',
+            id                = 1,
+            email             = 'mjb@gmail.com',
+            password          = '1q2w3e4r!',
+            name              = '민정',
+            phone             = '111-1111-1111',
             profile_image_url = '',
-            social_id        = '',
-            social_type      = '',
+            social_id         = '',
+            social_type       = '',
         )
     
     def tearDown(self):
@@ -94,14 +95,14 @@ class SignUpTest(TestCase):
 class SignInTest(TestCase):
     def setUp(self):
         User.objects.create(
-            id               = 1,
-            email            = 'minjbak@naver.com',
-            password         = '$2b$12$FCUz7aU5O.PbJOc73iGgYuGtNnkFpR2mjrWkcK3/SF4Oqy6r4Hmgi',
-            name             = '민정',
-            phone            = '111-1111-1111',
+            id                = 1,
+            email             = 'minjbak@naver.com',
+            password          = '$2b$12$FCUz7aU5O.PbJOc73iGgYuGtNnkFpR2mjrWkcK3/SF4Oqy6r4Hmgi',
+            name              = '민정',
+            phone             = '111-1111-1111',
             profile_image_url = '',
-            social_id        = '',
-            social_type      = '',
+            social_id         = '',
+            social_type       = '',
         )
         
     def tearDown(self):
@@ -277,4 +278,91 @@ class KakaoLoginTest(TestCase):
                 'message' : 'INVALID_TOKEN'
             }
         )
+
+class UserProfileUploadTest(TestCase):
+    def setUp(self):
+        User.objects.create(
+            id       = 1,
+            name     = '민정',
+            email    = 'minjbak@naver.com',
+            password = '$2b$12$FCUz7aU5O.PbJOc73iGgYuGtNnkFpR2mjrWkcK3/SF4Oqy6r4Hmgi',
+            phone    = '111-1111-1111'
+        )
+
+    def tearDown(self):
+        User.objects.all().delete()
         
+    @patch('users.views.FileUpload')
+    def test_profile_image_s3_upload_success(self, mocked_client):
+        login_body = {
+            'email'   : 'minjbak@naver.com',
+            'password': '12q23w34e45r!'
+        }
+        login_response = self.client.post('/users/signin', json.dumps(login_body), content_type = 'application/json')
+        access_token   = login_response.json()['access_token']
+        
+        class MockedResponse:
+            def upload(self, file):
+                return 'https://wearebnbbucket.s3.ap-northeast-2.amazonaws.com/d5620dde-2641-4c86-932f-ffdb1a550b25'
+        
+        file = SimpleUploadedFile(
+            name         = 'test.png',
+            content      = b'file_content',
+            content_type = 'image/png'
+        )
+        
+        mocked_client.return_value = MockedResponse()
+        headers                    = {'HTTP_Authorization': access_token, 'content-type' : 'multipart/form-data'}
+        body                       = {'filename' : file}
+        response                   = self.client.post('/users/profile-upload', body, **headers)
+        
+        self.assertEqual(response.json(), {'message' : 'SUCCESS'})
+        self.assertEqual(response.status_code, 200)
+
+    @patch('users.views.FileUpload')
+    def test_profile_image_s3_upload_except_error(self, mocked_client):
+        login_body = {
+            'email'   : 'minjbak@naver.com',
+            'password': '12q23w34e45r!'
+        }
+        login_response = self.client.post('/users/signin', json.dumps(login_body), content_type = 'application/json')
+        access_token   = login_response.json()['access_token']
+        
+        class MockedResponse:
+            def upload(self, file):
+                return None
+        
+        file = SimpleUploadedFile(
+            name         = 'test.png',
+            content      = b'file_content',
+            content_type = 'image/png'
+        )
+        
+        mocked_client.return_value = MockedResponse()
+        headers                    = {'HTTP_Authorization': access_token, 'content-type' : 'multipart/form-data'}
+        body                       = {'filename' : file}
+        response                   = self.client.post('/users/profile-upload', body, **headers)
+        
+        self.assertEqual(response.json(), {'message' : 'FILE_UPLOAD_ERROR'})
+        self.assertEqual(response.status_code, 400)
+
+    @patch('users.views.FileUpload')
+    def test_profile_image_s3_upload_key_error(self, mocked_client):
+        login_body = {
+            'email'   : 'minjbak@naver.com',
+            'password': '12q23w34e45r!'
+        }
+        login_response = self.client.post('/users/signin', json.dumps(login_body), content_type = 'application/json')
+        access_token   = login_response.json()['access_token']
+        
+        class MockedResponse:
+            def upload(self, file):
+                return None
+        
+        mocked_client.return_value = MockedResponse()
+        headers                    = {'HTTP_Authorization': access_token, 'content-type' : 'multipart/form-data'}
+        body                       = {}
+        response                   = self.client.post('/users/profile-upload', body, **headers)
+        
+        self.assertEqual(response.json(), {'message' : 'KEY_ERROR'})
+        self.assertEqual(response.status_code, 400)
