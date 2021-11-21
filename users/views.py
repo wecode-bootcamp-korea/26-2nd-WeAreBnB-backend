@@ -1,15 +1,17 @@
-import re
-import jwt
+import jwt, bcrypt, re
 import json
-import bcrypt
 import requests
 
-from datetime        import datetime, timedelta
-from django.http     import JsonResponse
-from django.views    import View
+from datetime               import datetime, timedelta
+from django.conf            import settings  
+from django.http            import JsonResponse
+from django.views           import View
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from json.decoder           import JSONDecodeError
 
-from config.settings  import SECRET_KEY, ALGORITHM
-from users.models    import User
+from config.settings        import SECRET_KEY, ALGORITHM
+from users.models           import User
+from core.utils             import login_required, FileUpload
 
 class SignUpView(View):
     def post(self, request):
@@ -98,3 +100,29 @@ class KakaoLoginView(View):
         
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
+
+class ProfileImageView(View):
+    @login_required    
+    def post(self, request):
+        try:
+            file = request.FILES['filename']
+            profile_image_url = FileUpload(
+                service    = 's3',
+                access_key = settings.AWS_ACCESS_KEY, 
+                secret_key = settings.AWS_SECRET_KEY
+                ).upload(file)
+            
+            if not profile_image_url:
+                return JsonResponse({"message" : "FILE_UPLOAD_ERROR"}, status=400)
+
+            user = User.objects.get(id=request.user.id)
+            user.profile_image_url = profile_image_url
+            user.save()
+            
+            return JsonResponse({'message' : 'SUCCESS'}, status=200)
+        except User.DoesNotExist:
+            return JsonResponse({"message" : "USER_DOES_NOT_EXIST"}, status=400)
+        except User.MultipleObjectsReturned:
+            return JsonResponse({"message" : "MULTIPLE_USER_RETURNED"}, status=400)
+        except JSONDecodeError:
+            return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
