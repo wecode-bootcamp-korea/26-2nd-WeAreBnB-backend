@@ -617,6 +617,7 @@ class DetailTest(TestCase):
 
     def test_success_roomdetail_view_get_method(self):
         response = self.client.get('/rooms/1')
+        
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {
             'results': {
@@ -637,36 +638,20 @@ class DetailTest(TestCase):
                             'roomOption_url' : 'https://cdn-icons-png.flaticon.com/512/93/93158.png'
                         }
                     ],
+                    'room_image': [
+                    'https://cdn.pixabay.com/photo/2016/11/18/17/20/living-room-1835923_960_720.jpg',
+                    ],
                     'location'      : '한국 서울시 강남구 청담동 11-5',
                     'latitude'      : 37.521927,
                     'longitude'     : 127.046626,
-                    'average_rating': 5.0,
-                    "review_count"  : 1
-                },
-                'reservation_date': [
-                    {
-                        'check_in' : '2021-11-01',
-                        'check_out': '2021-11-03',
-                        'days'     : 2
-                    }
-                ],
-                'room_image': [
-                    'https://cdn.pixabay.com/photo/2016/11/18/17/20/living-room-1835923_960_720.jpg',
-                ],
-                'review_info'     : [{
-                    'username'    : '이지은',
-                    'user_profile': None,
-                    'title'       : '생각보다 따뜻하고 만족',
-                    'content'     : '생각보다 따뜻하고 만족',
-                    'rating'      : 5.0,
-                    'date'        : '2021/11'
-                }]
+                }
             }
         }
     )
 
     def test_invalid_rooms_roomdetail_view_get_method(self):
         response = self.client.get('/rooms/4')
+
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {
             "message": "INVALID_ROOMS"
