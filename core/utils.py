@@ -11,7 +11,7 @@ def login_required(func):
         try:
             access_token = request.headers.get('Authorization', None)
             payload      = jwt.decode(access_token, os.environ.get('WEAREBNB_SECRET_KEY'), algorithms=os.environ.get('WEAREBNB_JWT_ALGORITHM'))
-            request.user = User.objects.get(id=payload['id'])
+            request.user = User.objects.get(id=payload['user_id'])
                         
         except jwt.exceptions.DecodeError:
             return JsonResponse({'message' : 'INVALID_TOKEN'}, status = 401)            
