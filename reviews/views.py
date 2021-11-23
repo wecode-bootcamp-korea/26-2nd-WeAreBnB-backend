@@ -1,11 +1,11 @@
-import json
-
-from django.views     import View
 from django.http      import JsonResponse
+from django.views     import View
 from django.db.models import Count, Avg
 from datetime         import datetime
 
 from rooms.models     import Room
+from reviews.models   import Review
+from core.utils       import login_required
 
 class ReviewsView(View):
     def get(self, request, room_id):
@@ -19,7 +19,7 @@ class ReviewsView(View):
             result = {
                 'review_info'      : [{
                         'username'     : review.user.name,
-                        'user_profile' : review.user.profile_image_url,
+                        'user_profile'  : review.user.profile_image_url,
                         'title'        : review.title,
                         'content'      : review.content,
                         'rating'       : review.rating,
@@ -39,3 +39,20 @@ class ReviewsView(View):
 
         except KeyError:
             return JsonResponse({'message' : 'KEY_ERROR'}, status=400)
+
+class MyReviewsView(View):
+    @login_required
+    def get(self, request):
+        user = request.user
+        
+        results = {
+            'reviews': [{
+                'review_id' : review.id,
+                'user_name' : review.user.name,
+                'room'      : review.room.title,
+                'title'     : review.title,
+                'content'   : review.content,
+                'created_at': review.created_at
+            } for review in Review.objects.filter(user = user)]
+        }
+        return JsonResponse({'results' : results}, status = 200)

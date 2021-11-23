@@ -113,3 +113,21 @@ class ReservationDateView(View):
 
         except KeyError:
             return JsonResponse({'message' : 'KEY_ERROR'}, status=400)
+
+class ReservationsView(View):
+    @login_required
+    def get(self, request):
+        user = request.user
+        
+        results = {
+            'reservations': [{
+                'reservation_id': reservation.id,
+                'address'       : reservation.room.location.address,
+                'title'         : reservation.room.title,
+                'image_url'     : reservation.room.room_images.first().image_url,
+                'check_in'      : reservation.check_in,
+                'check_out'     : reservation.check_out
+            } for reservation in Reservation.objects.filter(user = user)]
+        }
+
+        return JsonResponse({'results' : results}, status = 200)

@@ -98,17 +98,17 @@ class KakaoLoginView(View):
         
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
-    
+        
 class UserProfileView(View):
     @login_required
     def get(self, request):
         user   = request.user
         
         result = {
-            'name'              : user.name,
-            'profile_image_url' : user.profile_image_url,
-            'email'             : user.email,
-            'phone'             : user.phone,
+            'name'             : user.name,
+            'profile_image_url': user.profile_image_url,
+            'email'            : user.email,
+            'phone'            : user.phone,
         }
         
         return JsonResponse({'result' : result}, status=200)
