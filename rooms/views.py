@@ -12,6 +12,8 @@ class RoomListView(View):
     def get(self, request):
         check_in       = request.GET.get('check_in', None)
         check_out      = request.GET.get('check_out', None)
+        offset         = int(request.GET.get('offset', 0))
+        limit          = int(request.GET.get('limit', 15))
         ordering       = request.GET.get('sort', 'id')
         reserved_rooms = []
         
@@ -20,7 +22,7 @@ class RoomListView(View):
             'guest'       : 'max_guest__gte',
             'price_max'   : 'price__lte',
             'price_min'   : 'price__gte',
-            'room_type'   : 'room_type__name',
+            'room_type'   : 'room_type__name__in',
             'room_option' : 'options__name__in',
         }
         filter_set = {
@@ -28,6 +30,9 @@ class RoomListView(View):
         }
         if filter_set.get('options__name__in'):
             filter_set['options__name__in'] = request.GET.getlist('room_option')
+        if filter_set.get('room_type__name__in'):
+            filter_set['room_type__name__in'] = request.GET.getlist('room_type')
+        
         
         if check_in and check_out: 
             check_in_dt  = datetime.strptime(check_in, '%Y-%m-%d')  
@@ -45,7 +50,7 @@ class RoomListView(View):
                             .prefetch_related('room_images', 'options', 'review_set')\
                             .annotate(review_count=Count('review__id'))\
                             .annotate(review_rating=Avg('review__rating'))\
-                            .order_by(ordering)       
+                            .order_by(ordering)[offset:offset+limit]     
         results = [{
             'room_id'      : room.id,
             'title'        : room.title,
