@@ -1,15 +1,17 @@
 import json
 import jwt
 
-from django.test                    import TestCase, Client
+from django.test                    import TestCase, Client, TransactionTestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from unittest.mock                  import patch, MagicMock
 from datetime                       import datetime, timedelta
 from config.settings                import SECRET_KEY, ALGORITHM
+from freezegun                      import freeze_time
 
 from users.models                   import User
 
-class SignUpTest(TestCase):
+
+class SignUpTest(TransactionTestCase):
     def setUp(self):
         User.objects.create(
             id                = 1,
@@ -107,7 +109,8 @@ class SignInTest(TestCase):
         
     def tearDown(self):
         User.objects.all().delete()
-        
+    
+    @freeze_time('2019-01-02')
     def test_sign_in_success(self):
         client = Client()
         user   = {
@@ -116,8 +119,8 @@ class SignInTest(TestCase):
             'password': '12q23w34e45r!'
         }
         
-        response = client.post('/users/signin', json.dumps(user), content_type = 'application/json')
-        access_token = jwt.encode({'user_id': 1, 'exp': datetime.utcnow() + timedelta(days=7)}, SECRET_KEY, ALGORITHM)
+        response     = client.post('/users/signin', json.dumps(user), content_type = 'application/json')
+        access_token = jwt.encode({'user_id': 1, 'exp': datetime.strptime('2019-01-02', '%Y-%m-%d') + timedelta(days=7)}, SECRET_KEY, ALGORITHM)
         
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), 
@@ -136,7 +139,7 @@ class SignInTest(TestCase):
         
         response = client.post('/users/signin', json.dumps(user), content_type = 'application/json')
         
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(), 
             {
                 'message' : 'INVALID_PASSWORD'
@@ -158,7 +161,8 @@ class SignInTest(TestCase):
             }
         )
 
-class KakaoLoginTest(TestCase):
+class KakaoLoginTest(TransactionTestCase):
+    reset_sequences = True
     def setUp(self):
         User.objects.create(
             id        = 1,
@@ -169,7 +173,8 @@ class KakaoLoginTest(TestCase):
 
     def tearDown(self):
         User.objects.all().delete()
-        
+    
+    @freeze_time('2019-01-02')
     @patch('users.views.requests')
     def test_kakao_login_new_user_success(self, mocked_requests):
         client = Client()
@@ -189,7 +194,7 @@ class KakaoLoginTest(TestCase):
         mocked_requests.get = MagicMock(return_value = MockResponse())
         headers             = {'HTTP_Authorization': 'fake_access_token'}
         response            = client.get('/users/kakaologin', **headers)
-        access_token        = jwt.encode({'user_id': 2, 'exp': datetime.utcnow() + timedelta(days=7)}, SECRET_KEY, ALGORITHM)
+        access_token        = jwt.encode({'user_id': 2, 'exp': datetime.strptime('2019-01-02', '%Y-%m-%d') + timedelta(days=7)}, SECRET_KEY, ALGORITHM)
         
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), 
@@ -198,7 +203,8 @@ class KakaoLoginTest(TestCase):
                 'access_token' : access_token
             }
         )
-        
+    
+    @freeze_time('2019-01-02')
     @patch('users.views.requests')
     def test_kakao_login_existing_user_success(self, mocked_requests):
         client = Client()
@@ -218,7 +224,7 @@ class KakaoLoginTest(TestCase):
         mocked_requests.get = MagicMock(return_value = MockResponse())
         headers             = {'HTTP_Authorization': 'fake_access_token'}
         response            = client.get('/users/kakaologin', **headers)
-        access_token        = jwt.encode({'user_id': 1, 'exp': datetime.utcnow() + timedelta(days=7)}, SECRET_KEY, ALGORITHM)
+        access_token        = jwt.encode({'user_id': 1, 'exp': datetime.strptime('2019-01-02', '%Y-%m-%d') + timedelta(days=7)}, SECRET_KEY, ALGORITHM)
         
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), 
