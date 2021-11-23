@@ -8,8 +8,12 @@ from datetime        import datetime, timedelta
 from django.http     import JsonResponse
 from django.views    import View
 
-from config.settings  import SECRET_KEY, ALGORITHM
-from users.models    import User
+from config.settings      import SECRET_KEY, ALGORITHM
+from users.models        import User
+from reservations.models import Reservation
+from rooms.models        import Room
+from reviews.models      import Review
+from core.utils          import login_required
 
 class SignUpView(View):
     def post(self, request):
@@ -98,3 +102,43 @@ class KakaoLoginView(View):
         
         except KeyError:
             return JsonResponse({'message': 'KEY_ERROR'}, status=400)
+
+class MyPageDetailView(View):
+    @login_required
+    def get(self, request):
+        try:
+            user_id = request.user.id
+            
+            results = {
+                'reservations': [{
+                    'reservation_id': reservation.id,
+                    'address'       : reservation.room.location.address,
+                    'title'         : reservation.room.title,
+                    'image_url'     : reservation.room.room_images.first().image_url,
+                    'check_in'      : reservation.check_in,
+                    'check_out'     : reservation.check_out
+                } for reservation in Reservation.objects.filter(user_id = user_id)],
+                
+                'reviews': [{
+                    'review_id' : review.id,
+                    'user_name' : review.user.name,
+                    'room'      : review.room.title,
+                    'title'     : review.title,
+                    'content'   : review.content,
+                    'created_at': review.created_at
+                } for review in Review.objects.filter(user_id = user_id)],
+                
+                'room_title_list' : [reservation.room.title for reservation in Reservation.objects.filter(user_id = user_id).select_related('room')],
+                'profile_image_url': User.objects.get(id = user_id).profile_image_url
+            }
+
+            return JsonResponse({'results' : results}, status = 200)
+        
+        except Reservation.DoesNotExist:
+            return JsonResponse({"message" : "INVALID_RESERVATION"}, status=404)
+        
+        except Review.DoesNotExist:
+            return JsonResponse({"message" : "INVALID_REVIEW"}, status=404)
+
+        except KeyError:
+            return JsonResponse({'message' : 'KEY_ERROR'}, status=400)

@@ -44,8 +44,8 @@ class RoomImage(models.Model):
     class Meta:
         db_table = 'room_images'
         
-    def __str__(self):
-        return self.room
+    # def __str__(self):
+    #     return self.room
     
 class RoomType(models.Model):
     name = models.CharField(max_length=100)
