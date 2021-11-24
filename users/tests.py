@@ -309,9 +309,7 @@ class ProfileImageTest(TestCase):
         mocked_file_upload.upload = MagicMock(return_value = MockedResponse())
         headers          = {'HTTP_Authorization': access_token, 'format' : 'multipart'}
         body             = {'filename' : file}
-        response         = self.client.post('/edit-photo', body, **headers)
-
-        print(response)
+        response         = self.client.post('/users/edit-photo', body, **headers)
         
         self.assertEqual(response.json(), {'message' : 'SUCCESS'})
         self.assertEqual(response.status_code, 200)

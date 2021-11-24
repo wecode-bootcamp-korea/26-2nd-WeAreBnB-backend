@@ -9,9 +9,9 @@ from django.views           import View
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from json.decoder           import JSONDecodeError
 
-from config.settings        import SECRET_KEY, ALGORITHM
+from config.settings        import SECRET_KEY, ALGORITHM, AWS_ACCESS_KEY, AWS_SECRET_KEY, S3_BUCKET_NAME
 from users.models           import User
-from core.utils             import login_required, FileUpload
+from core.utils             import login_required, FileUpload, s3_client
 
 class SignUpView(View):
     def post(self, request):
@@ -105,12 +105,9 @@ class ProfileImageView(View):
     @login_required    
     def post(self, request):
         try:
-            file = request.FILES['filename']
-            profile_image_url = FileUpload(
-                service    = 's3',
-                access_key = settings.AWS_ACCESS_KEY, 
-                secret_key = settings.AWS_SECRET_KEY
-                ).upload(file)
+            file              = request.FILES['filename']
+            file_uploader     = FileUpload(s3_client)
+            profile_image_url = file_uploader.upload(file)
             
             if not profile_image_url:
                 return JsonResponse({"message" : "FILE_UPLOAD_ERROR"}, status=400)

@@ -5,31 +5,48 @@ import uuid
 from django.conf   import settings
 from django.http   import JsonResponse
 from django.db     import connection, reset_queries
+from config.settings        import AWS_ACCESS_KEY, AWS_SECRET_KEY, S3_BUCKET_NAME
 
 from users.models  import User
 
-class FileUpload:
-    def __init__(self, **kwargs):
-        self.client = boto3.client(
-            kwargs['service'],
-            aws_access_key_id     = kwargs['access_key'],
-            aws_secret_access_key = kwargs['secret_key']
+class MyS3Client:
+    def __init__(self, access_key, secret_key, bucket_name):
+        boto3_s3 = boto3.client(
+            's3',
+            aws_access_key_id     = access_key,
+            aws_secret_access_key = secret_key
         )
-    
+        self.s3_client   = boto3_s3
+        self.bucket_name = bucket_name
+
     def upload(self, file):
-        try: 
+        try:
             file_id = str(uuid.uuid4())
-            self.client.upload_fileobj(
+            
+            self.s3_client.upload_fileobj(
                     file,
-                    settings.S3_BUCKET_NAME,
+                    self.bucket_name,
                     file_id,
                     ExtraArgs = {
                         'ContentType' : file.content_type
                     }
-                )
-            return f'https://{settings.S3_BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/{file_id}'
+            )
+            return f'https://{self.bucket_name}.s3.ap-northeast-2.amazonaws.com/{file_id}'
         except:
             return None
+            
+    def delete(self, path):
+        return self.s3_client.delete_object(bucket=self.bucket_name, Key=f'wanted/{path}')
+
+s3_client = MyS3Client(AWS_ACCESS_KEY, AWS_SECRET_KEY, S3_BUCKET_NAME)
+
+class FileUpload:
+    def __init__(self, client):
+        self.client = client
+        
+    def upload(self, file):
+        return self.client.upload(file)
+
 
 def login_required(func):
     def wrapper(self, request, *args, **kwargs):
