@@ -43,6 +43,12 @@
 
 #### 한화연
 
+> 숙소 정보 조회 API
+- 숙소별 상세정보 조회 API
+> 예약 API
+- 숙소별 조건에 따른 예약 생성/수정/취소 API
+- 숙소별 예약 리스트 API
+
 ## ERD
 
 ![WeAreBnB](https://user-images.githubusercontent.com/89597066/144699950-207656de-0ec4-4a9d-a606-b189a052ad97.png)
@@ -53,7 +59,7 @@
 
 > **이지은** [에어비앤비 클론 프로젝트 후기](https://jeleedev.tistory.com/168)
 
-> **한화연**
+> **한화연** [WeAreBnB Project(2차 프로젝트) 회고](https://velog.io/@hanasmile/TIL-28.-WeAreBnB-Project2%EC%B0%A8-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%ED%9A%8C%EA%B3%A0)
 
 ## Reference
 
